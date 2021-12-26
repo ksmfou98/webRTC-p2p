@@ -22,13 +22,13 @@ const ROOM_MAX_USER = 2;
 io.on("connection", (socket) => {
   socket.on("joinRoom", ({ roomId }: { roomId: string }) => {
     if (users[roomId]) {
-      // if (users[roomId].length >= ROOM_MAX_USER) {
-      //   console.log("방이 꽉 참");
-      //   io.sockets.to(socket.id).emit("roomFull", {
-      //     message: "방이 꽉 찼습니다.",
-      //   });
-      //   return;
-      // }
+      if (users[roomId].length >= ROOM_MAX_USER) {
+        console.log("방이 꽉 참");
+        io.sockets.to(socket.id).emit("roomFull", {
+          message: "방이 꽉 찼습니다.",
+        });
+        return;
+      }
       users[roomId].push({ id: socket.id });
     } else {
       users[roomId] = [{ id: socket.id }];
@@ -44,21 +44,24 @@ io.on("connection", (socket) => {
     io.sockets.to(socket.id).emit("allUsers", usersInThisRoom);
   });
 
+  socket.on("offer", (sdp: RTCSessionDescriptionInit) => {
+    const roomId = socketToRoom[socket.id];
+    const targetSocketId = users[roomId].find(
+      (user) => user.id !== socket.id
+    ).id;
+    console.log(targetSocketId);
+    io.sockets.to(targetSocketId).emit("getOffer", sdp);
+  });
+
   socket.on("disconnect", () => {
     const roomId = socketToRoom[socket.id];
     const room = users[roomId];
     if (room) {
       users[roomId] = room.filter((user) => user.id !== socket.id);
-
-      if (users[roomId].length === 0) {
-        delete users[roomId];
-      }
+      if (users[roomId].length === 0) delete users[roomId];
     }
 
     delete socketToRoom[socket.id];
-
-    console.log(users);
-    console.log(socketToRoom);
 
     socket.broadcast.to(roomId).emit("userExit", {
       id: socket.id,

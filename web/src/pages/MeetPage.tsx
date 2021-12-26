@@ -31,6 +31,20 @@ const MeetPage = () => {
     }
   };
 
+  const createOffer = async () => {
+    if (!pcRef.current) return;
+    try {
+      const sdp = await pcRef.current.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true,
+      });
+      await pcRef.current.setLocalDescription(new RTCSessionDescription(sdp));
+      socket.emit("offer", sdp);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     pcRef.current = new RTCPeerConnection(pc_config);
 
@@ -38,13 +52,18 @@ const MeetPage = () => {
       roomId,
     });
 
-    // socket.on("roomFull", ({ message }: { message: string }) => {
-    //   alert(message);
-    //   navigate("/");
-    // });
+    socket.on("roomFull", ({ message }: { message: string }) => {
+      alert(message);
+      navigate("/");
+    });
 
     socket.on("allUsers", (users: Array<{ id: string }>) => {
+      if (users.length > 0) createOffer();
       console.log(users);
+    });
+
+    socket.on("getOffer", (sdp: RTCSessionDescription) => {
+      console.log(sdp);
     });
 
     socket.on("userExit", ({ id }: { id: string }) => {
