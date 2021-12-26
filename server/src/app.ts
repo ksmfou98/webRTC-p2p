@@ -15,10 +15,31 @@ const io = new Server(server, {
   allowEIO3: true,
 });
 
+const users = {};
+const ROOM_MAX_USER = 2;
+
 io.on("connection", (socket) => {
   socket.on("joinRoom", ({ roomId }: { roomId: string }) => {
+    if (users[roomId]) {
+      // if (users[roomId].length >= ROOM_MAX_USER) {
+      //   console.log("방이 꽉 참");
+      //   io.sockets.to(socket.id).emit("roomFull", {
+      //     message: "방이 꽉 찼습니다.",
+      //   });
+      //   return;
+      // }
+      users[roomId].push({ id: socket.id });
+    } else {
+      users[roomId] = [{ id: socket.id }];
+    }
     socket.join(roomId);
     console.log(`✅ socket join room ${roomId}`);
+
+    const usersInThisRoom = users[roomId].filter(
+      (user) => user.id !== socket.id
+    );
+
+    io.sockets.to(socket.id).emit("allUsers", usersInThisRoom);
   });
 });
 

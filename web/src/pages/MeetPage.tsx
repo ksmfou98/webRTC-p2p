@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { io } from "socket.io-client";
 
 const pc_config = {
@@ -17,6 +17,7 @@ const MeetPage = () => {
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const pcRef = useRef<RTCPeerConnection>();
   const { roomId } = useParams();
+  const navigate = useNavigate();
 
   const getMedia = async () => {
     try {
@@ -36,10 +37,18 @@ const MeetPage = () => {
     socket.emit("joinRoom", {
       roomId,
     });
-    console.log(roomId);
+
+    // socket.on("roomFull", ({ message }: { message: string }) => {
+    //   alert(message);
+    //   navigate("/");
+    // });
+
+    socket.on("allUsers", (users: Array<{ id: string }>) => {
+      console.log(users);
+    });
 
     getMedia();
-  }, [roomId]);
+  }, [roomId, navigate]);
 
   return (
     <div>
