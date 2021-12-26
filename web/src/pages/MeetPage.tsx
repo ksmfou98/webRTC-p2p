@@ -45,6 +45,21 @@ const MeetPage = () => {
     }
   };
 
+  const createAnswer = async (sdp: RTCSessionDescription) => {
+    if (!pcRef.current) return;
+    try {
+      await pcRef.current.setRemoteDescription(new RTCSessionDescription(sdp));
+      const mySdp = await pcRef.current.createAnswer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true,
+      });
+      await pcRef.current.setLocalDescription(new RTCSessionDescription(mySdp));
+      socket.emit("answer", mySdp);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   useEffect(() => {
     pcRef.current = new RTCPeerConnection(pc_config);
 
@@ -63,7 +78,14 @@ const MeetPage = () => {
     });
 
     socket.on("getOffer", (sdp: RTCSessionDescription) => {
-      console.log(sdp);
+      console.log("getOffer", sdp);
+      createAnswer(sdp);
+    });
+
+    socket.on("getAnswer", (sdp: RTCSessionDescription) => {
+      console.log("getAnswer", sdp);
+      if (!pcRef.current) return;
+      pcRef.current.setRemoteDescription(new RTCSessionDescription(sdp));
     });
 
     socket.on("userExit", ({ id }: { id: string }) => {

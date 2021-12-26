@@ -49,8 +49,15 @@ io.on("connection", (socket) => {
     const targetSocketId = users[roomId].find(
       (user) => user.id !== socket.id
     ).id;
-    console.log(targetSocketId);
     io.sockets.to(targetSocketId).emit("getOffer", sdp);
+  });
+
+  socket.on("answer", (sdp: RTCSessionDescriptionInit) => {
+    const roomId = socketToRoom[socket.id];
+    const targetSocketId = users[roomId].find(
+      (user) => user.id !== socket.id
+    ).id;
+    io.sockets.to(targetSocketId).emit("getAnswer", sdp);
   });
 
   socket.on("disconnect", () => {
