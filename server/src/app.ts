@@ -60,6 +60,14 @@ io.on("connection", (socket) => {
     io.sockets.to(targetSocketId).emit("getAnswer", sdp);
   });
 
+  socket.on("candidate", (candidate: RTCIceCandidate) => {
+    const roomId = socketToRoom[socket.id];
+    const targetSocketId = users[roomId].find(
+      (user) => user.id !== socket.id
+    ).id;
+    io.sockets.to(targetSocketId).emit("getCandidate", candidate);
+  });
+
   socket.on("disconnect", () => {
     const roomId = socketToRoom[socket.id];
     const room = users[roomId];
