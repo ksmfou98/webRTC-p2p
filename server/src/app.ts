@@ -15,6 +15,13 @@ const io = new Server(server, {
   allowEIO3: true,
 });
 
+io.on("connection", (socket) => {
+  socket.on("joinRoom", ({ roomId }: { roomId: string }) => {
+    socket.join(roomId);
+    console.log(`✅ socket join room ${roomId}`);
+  });
+});
+
 app.use(cors());
 
 server.listen(PORT, () => {
