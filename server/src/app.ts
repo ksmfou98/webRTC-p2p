@@ -16,6 +16,7 @@ const io = new Server(server, {
 });
 
 const users = {};
+const socketToRoom = {};
 const ROOM_MAX_USER = 2;
 
 io.on("connection", (socket) => {
@@ -32,6 +33,7 @@ io.on("connection", (socket) => {
     } else {
       users[roomId] = [{ id: socket.id }];
     }
+    socketToRoom[socket.id] = roomId;
     socket.join(roomId);
     console.log(`✅ socket join room ${roomId}`);
 
@@ -40,6 +42,27 @@ io.on("connection", (socket) => {
     );
 
     io.sockets.to(socket.id).emit("allUsers", usersInThisRoom);
+  });
+
+  socket.on("disconnect", () => {
+    const roomId = socketToRoom[socket.id];
+    const room = users[roomId];
+    if (room) {
+      users[roomId] = room.filter((user) => user.id !== socket.id);
+
+      if (users[roomId].length === 0) {
+        delete users[roomId];
+      }
+    }
+
+    delete socketToRoom[socket.id];
+
+    console.log(users);
+    console.log(socketToRoom);
+
+    socket.broadcast.to(roomId).emit("userExit", {
+      id: socket.id,
+    });
   });
 });
 

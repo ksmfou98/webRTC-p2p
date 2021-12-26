@@ -47,7 +47,16 @@ const MeetPage = () => {
       console.log(users);
     });
 
+    socket.on("userExit", ({ id }: { id: string }) => {
+      console.log(`${id} 님이 나가셨습니다.`);
+    });
+
     getMedia();
+
+    return () => {
+      socket.emit("disconnect");
+      socket.off();
+    };
   }, [roomId, navigate]);
 
   return (
