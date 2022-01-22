@@ -2,9 +2,10 @@ import express from "express";
 import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
+import "dotenv/config";
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 8080;
 const server = http.createServer(app);
 
 // socket 서버 생성
