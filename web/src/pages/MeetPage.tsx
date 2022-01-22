@@ -9,7 +9,7 @@ const pc_config = {
     },
   ],
 };
-const SERVER_URL = "https://ancient-escarpment-77943.herokuapp.com/";
+const SERVER_URL = "http://localhost:4000";
 const socket = io(SERVER_URL);
 
 const MeetPage = () => {
